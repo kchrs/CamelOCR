@@ -1,50 +1,58 @@
 package com.hmocr.hmocr.camel;
 
+import com.hmocr.hmocr.jpa.Ocr;
+import com.hmocr.hmocr.jpa.OcrRepository;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import java.io.*;
 
 @Component
 public class ExecRoute extends RouteBuilder {
+
     static Logger log = LoggerFactory.getLogger(ExecRoute.class);
     public final String TESS_EXE = "tesseract";
     public final String TESS_LANG = "-l ell";
     public final String TESS_OUTPUT = "/mnt/HMOCR/tess-ocr/output/";
-
     public final String CONV_DENSITY="-density 300";
     public final String CONV_DEPT="-depth 8";
     public final String CONV_OTHER_COMMANDS="-strip -background white";
     public final String CONV_OUT="/mnt/HMOCR/convert/TEMP/";
 
+    @Autowired
+    private OcrRepository ocrRepository;
 
     @Override
+//    @Bean
     public void configure() throws Exception {
 
         //todo create paths for image processing
         from("file:/mnt/HMOCR/convert/input?noop=true")
                 .process(exchange -> {
+                    Ocr ocr = new Ocr();
                     File fileIn = exchange.getIn().getBody(File.class);
                     File fileInPDF = exchange.getIn().getBody(File.class);
-
                     String tempFile= fileIn.getPath();
+                    ocr.setInFileNamePdf(tempFile);
+                    System.out.println("OCR PDF "+ocr.getInFileNamePdf()+" saved.");
+                    ocrRepository.save(ocr);
                     log.info("Processing file: " + String.valueOf(fileIn));
                     if (fileIn != null) {
                          tempFile= fileIn.getPath();
                         System.out.println("tempFile: "+tempFile);
-
-                             if(tempFile.contains(".pdf") ||
-                                tempFile.contains(".docx")||
-                                tempFile.contains(".doc"))  {
+                            if ( tempFile.contains(".pdf")  ||
+                                 tempFile.contains(".docx") ||
+                                 tempFile.contains(".doc"))   {
                                  tempFile = FilenameUtils.removeExtension(tempFile);
                                  tempFile=CONV_OUT+FilenameUtils.getName(tempFile)+".tiff";
                                  System.out.println("FilenameUtils: "+ FilenameUtils.getName(tempFile));
                                  System.out.println("Check tempfile : "+ tempFile);
                         }
-
                         System.out.println("FILEINPDF= "+fileInPDF);
                           String command = "convert "
                                           + CONV_DENSITY            + " "
@@ -59,11 +67,11 @@ public class ExecRoute extends RouteBuilder {
                 });
 //.*.xml
                 from("file:/mnt/HMOCR/convert/TEMP?noop=true")
-//                .to("file:/mnt/HMOCR/convert/tiff?noop=true");
-
+//                  .to("file:/mnt/HMOCR/convert/tiff?noop=true");
                         .to("file:/mnt/HMOCR/convert/tiff?noop=true")
                         .process(exchange -> {
                             File fileIn = exchange.getIn().getBody(File.class);
+
 //                    if (isCompletelyWritten(createFile(fileIn))) {
 //                        System.out.println("file is being processed, wait");
 //                        //todo thread wait if file is not completely written
@@ -72,34 +80,26 @@ public class ExecRoute extends RouteBuilder {
 //                    }
                         })
         .to("file:/mnt/HMOCR/tess-ocr/input?noop=true")
-//        from("file:/mnt/tess-ocr/input?noop=true")
                 .process(exchange -> {
                     File fileIn = exchange.getIn().getBody(File.class);
                     log.info("Processing file: " + String.valueOf(fileIn));
                     if (fileIn != null) {
-
                         String temp = FilenameUtils.removeExtension(fileIn.getName());
-                        System.out.println("TEMP FILE "+temp);
+                       System.out.println("TEMP FILE "+temp);
                     System.out.println("fileIn = " + fileIn);
                     String command = "tesseract " + fileIn + " " + TESS_LANG + " " + TESS_OUTPUT+temp+" "+"pdf";
                     String output = executeCommand(command);
                     System.out.println(output);
                    // File ocrFile = new File("/mnt/HMOCR/tess-ocr/output/yeah.pdf");
-
                         File tempFile=new File("/mnt/HMOCR/tess-ocr/output/"+temp+".pdf");
-
                         System.out.println("new ocrFile= "+tempFile);
                         copyCompleted(tempFile.getPath());
-                        // FileUtils.copyFile(ocrFile,tempFile);
-//                        if(new File("/mnt/HMOCR/tess-ocr/output/yeah.pdf").exists())
-//                        {
-//                            fileIn=new File("/mnt/HMOCR/tess-ocr/yeah.pdf");
-//                            System.out.println("fileIn.getAbsolutePath() "+fileIn.getAbsolutePath());
-//                        }
-                       // System.out.println("File created: " + createFile(fileIn));
                     }
                 });
+
+                //todo remove files from other directories when file PDF apears in output folder
     }
+
 
     public void copyCompleted(String filePath) {
         String fileStr = filePath;
@@ -114,6 +114,7 @@ public class ExecRoute extends RouteBuilder {
                     break;
                 } catch (Exception ex) {
                     System.out.println("  still copying ........... " + ex.getMessage());
+
                 } finally {
                     if (ran != null) try {
                         ran.close();
@@ -128,11 +129,6 @@ public class ExecRoute extends RouteBuilder {
             }
         }
     }
-
-
-
-
-
 
 
     private boolean isCompletelyWritten(File file) {

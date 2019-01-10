@@ -32,16 +32,54 @@
 			<artifactId>camel-spring-boot-starter</artifactId>
 			<version>2.23.0</version>
 		</dependency>
+
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-jms</artifactId>
+			<version>2.23.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-jpa</artifactId>
+			<version>2.23.0</version>
+			<!-- use the same version as your Camel core version -->
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>8.0.13</version>
+		</dependency>
+
+		<!--<dependency>-->
+			<!--<groupId>org.springframework.boot</groupId>-->
+			<!--<artifactId>spring-boot-starter-activemq</artifactId>-->
+		<!--</dependency>-->
+
+		<!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.18.4</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-pool</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>RELEASE</version>
 		</dependency>
-		<dependency>
-			<groupId>org.hsqldb</groupId>
-			<artifactId>hsqldb</artifactId>
-			<scope>runtime</scope>
-		</dependency>
+		<!--<dependency>-->
+			<!--<groupId>org.hsqldb</groupId>-->
+			<!--<artifactId>hsqldb</artifactId>-->
+			<!--<scope>runtime</scope>-->
+		<!--</dependency>-->
 
 		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-test -->
 		<!--<dependency>-->
@@ -89,3 +127,4 @@
 	</build>
 
 </project>
+
